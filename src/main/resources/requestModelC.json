@@ -1,0 +1,32 @@
+{
+  "command":"sampleService",
+  "content":{
+    "action":{
+      "name":"sampleTestC"
+    },
+    "parameters":{
+      "list":[
+        [
+          {
+            "inner1": "test1",
+            "inner2": "test2"
+          },
+          {
+            "inner1": "test3",
+            "inner2": "test4"
+          }
+        ],
+        [
+          {
+            "inner1": "testA",
+            "inner2": "testB"
+          },
+          {
+            "inner1": "testC",
+            "inner2": "testD"
+          }
+        ]
+      ]
+    }
+  }
+}

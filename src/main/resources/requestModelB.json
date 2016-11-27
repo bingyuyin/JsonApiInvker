@@ -1,0 +1,14 @@
+{
+  "command":"sampleService",
+  "content":{
+    "action":{
+      "name":"sampleTestB"
+    },
+    "parameters":{
+      "list":[
+        "testB1",
+        "testB2"
+      ]
+    }
+  }
+}
