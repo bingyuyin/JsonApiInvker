@@ -1,6 +1,7 @@
 package com.suiyu.lab.framework.json.api.sample.model;
 
 import com.suiyu.lab.framework.json.api.annotation.APIComponentDefinition;
+import com.suiyu.lab.framework.json.api.annotation.APIHeaderDefinition;
 import com.suiyu.lab.framework.json.api.annotation.APIParameterDefinition;
 import com.suiyu.lab.framework.json.api.annotation.APIParametersDefinition;
 
@@ -8,6 +9,15 @@ import com.suiyu.lab.framework.json.api.annotation.APIParametersDefinition;
  * Created by BingyuYin on 2016/11/13.
  */
 public class Command {
+    @APIHeaderDefinition
+    private String requestId;
+
+    @APIHeaderDefinition
+    private String originalId;
+
+    @APIHeaderDefinition
+    private String targetId;
+
     @APIComponentDefinition
     private String command;
     private Content content;
@@ -17,6 +27,18 @@ public class Command {
 
     @APIParameterDefinition(required = false)
     private String singleParameter;
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public String getOriginalId() {
+        return originalId;
+    }
+
+    public String getTargetId() {
+        return targetId;
+    }
 
     public String getCommand() {
         return command;

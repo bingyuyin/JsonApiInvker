@@ -2,10 +2,7 @@ package com.suiyu.lab.framework.json.api.service;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import com.suiyu.lab.framework.json.api.annotation.APIComponentDefinition;
-import com.suiyu.lab.framework.json.api.annotation.APIDefinition;
-import com.suiyu.lab.framework.json.api.annotation.APIParameterDefinition;
-import com.suiyu.lab.framework.json.api.annotation.APIParametersDefinition;
+import com.suiyu.lab.framework.json.api.annotation.*;
 import com.suiyu.lab.framework.json.api.exception.APIModelParseException;
 import com.suiyu.lab.framework.json.api.exception.MissingAPIParameterException;
 import com.suiyu.lab.framework.json.api.model.InvokeModel;
@@ -52,7 +49,8 @@ public class APIParserService {
         List<String> apiComponentList = new ArrayList<String>();
         List<String> apiList = new ArrayList<String>();
         Map<String, Object> apiParameters = new HashMap<String, Object>();
-        doParseDefinitionModel(object, apiComponentList, apiList, apiParameters);
+        Map<String, String> headerMap = new HashMap<String, String>();
+        doParseDefinitionModel(object, apiComponentList, apiList, apiParameters, headerMap);
         if (apiComponentList.size() > 1) {
             throw new APIModelParseException("Multiple api components found in: " + var);
         } else if (apiComponentList.size() == 0) {
@@ -63,12 +61,13 @@ public class APIParserService {
         } else if (apiList.size() == 0) {
             throw new APIModelParseException("No api found in: " + var);
         }
-        return new InvokeModel(apiComponentList.get(0), apiList.get(0), apiParameters);
+        return new InvokeModel(apiComponentList.get(0), apiList.get(0), apiParameters, headerMap);
     }
     private void doParseDefinitionModel(Object instance,
                                         List<String> apiComponentList,
                                         List<String> apiList,
-                                        Map<String, Object> apiParameters) throws APIModelParseException{
+                                        Map<String, Object> apiParameters,
+                                        Map<String, String> headerMap) throws APIModelParseException{
         if (null == instance) {
             return ;
         }
@@ -78,8 +77,7 @@ public class APIParserService {
             if (field.isAnnotationPresent(APIComponentDefinition.class)) {
                 if (field.getType().equals(String.class)) {
                     try {
-                        Method method = reflectGetFieldMethod(clazz, field);
-                        String apiComponent = (String)method.invoke(instance);
+                        String apiComponent = (String)retrieveFieldByGetter(instance, field, clazz);
                         if (apiComponent != null && !apiComponent.isEmpty()) {
                             apiComponentList.add(apiComponent);
                         }
@@ -94,8 +92,7 @@ public class APIParserService {
             if (field.isAnnotationPresent(APIDefinition.class)) {
                 if (field.getType().equals(String.class)) {
                     try {
-                        Method method = reflectGetFieldMethod(clazz, field);
-                        String api = (String)method.invoke(instance);
+                        String api = (String)retrieveFieldByGetter(instance, field, clazz);
                         if (api != null && !api.isEmpty()) {
                             apiList.add(api);
                         }
@@ -106,6 +103,7 @@ public class APIParserService {
                     logger.warn("Api definition should be string type");
                 }
             }
+
             if (field.isAnnotationPresent(APIParametersDefinition.class)) {
                 Object fieldInstance = null;
                 try {
@@ -144,29 +142,34 @@ public class APIParserService {
             }
 
             if (field.isAnnotationPresent(APIParameterDefinition.class)) {
-                Object varObj = null;
-                try {
-                    Method varMethod = reflectGetFieldMethod(clazz, field);
-                    varObj = varMethod.invoke(instance);
-                } catch (Exception e) {
-                    logger.error("Exception occurs while parse api parameter: {}", field.getName());
-                }
+                Object varObj = retrieveFieldByGetter(instance, field, clazz);
+
                 if (null == varObj && field.getAnnotation(APIParameterDefinition.class).required()) {
                     throw new MissingAPIParameterException("Missing api parameter: " + field.getName());
                 }
                 apiParameters.put(field.getName(),varObj);
-
             }
 
-            Object instanceVar = null;
-            try {
-                Method method = reflectGetFieldMethod(clazz, field);
-                instanceVar = method.invoke(instance);
-            } catch (Exception e) {
-                // ignore the message
+            if (field.isAnnotationPresent(APIHeaderDefinition.class)) {
+                Object varObj = retrieveFieldByGetter(instance, field, clazz);
+                if (varObj == null || varObj instanceof String) {
+                    String headerName = field.getAnnotation(APIHeaderDefinition.class).value().trim();
+                    if (headerName.isEmpty()) {
+                        headerName = field.getName();
+                    }
+                    if (null == varObj) {
+                        headerMap.put(headerName, "");
+                    } else {
+                        headerMap.put(headerName, (String) varObj);
+                    }
+                } else {
+                    logger.error("the api header definition should be String type");
+                }
             }
+
+            Object instanceVar = retrieveFieldByGetter(instance, field, clazz);
             if (instanceVar != null) {
-                doParseDefinitionModel(instanceVar, apiComponentList, apiList, apiParameters);
+                doParseDefinitionModel(instanceVar, apiComponentList, apiList, apiParameters, headerMap);
             }
         }
     }
@@ -176,5 +179,16 @@ public class APIParserService {
         Method method = clazz.getDeclaredMethod("get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1));
         method.setAccessible(true);
         return method;
+    }
+
+    public Object retrieveFieldByGetter(Object instance, Field field, Class<?> clazz){
+        Object var = null;
+        try {
+            Method method = reflectGetFieldMethod(clazz, field);
+            var = method.invoke(instance);
+        } catch (Exception e) {
+            // ignore the exception
+        }
+        return var;
     }
 }

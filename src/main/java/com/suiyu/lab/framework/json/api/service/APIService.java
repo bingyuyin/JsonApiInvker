@@ -5,6 +5,7 @@ import com.google.common.reflect.ClassPath;
 import com.google.gson.*;
 import com.suiyu.lab.framework.json.api.annotation.API;
 import com.suiyu.lab.framework.json.api.annotation.APIComponent;
+import com.suiyu.lab.framework.json.api.annotation.APIHeaderMap;
 import com.suiyu.lab.framework.json.api.annotation.APIParameter;
 import com.suiyu.lab.framework.json.api.exception.APIModelParseException;
 import com.suiyu.lab.framework.json.api.model.InvokeCandidate;
@@ -66,10 +67,10 @@ public class APIService {
         if (null == invokeModel) {
             throw new APIModelParseException("Failed to parse the api.");
         }
-        doInvoke(invokeModel.getServiceComponent(), invokeModel.getApi(), invokeModel.getArgsMap());
+        doInvoke(invokeModel.getServiceComponent(), invokeModel.getApi(), invokeModel.getArgsMap(), invokeModel.getHeaderMap());
     }
 
-    private void doInvoke(String serviceComponentName, String apiName, Map<String, Object> source) throws APIInvokeException{
+    private void doInvoke(String serviceComponentName, String apiName, Map<String, Object> source, Map<String, String> headerMap) throws APIInvokeException{
         try {
             ClassPath classPath = ClassPath.from(classLoader);
             ImmutableSet<ClassPath.ClassInfo> classInfoSet;
@@ -107,6 +108,10 @@ public class APIService {
                     Map<String, Object> sourceCpy = new HashMap<String, Object>();
                     sourceCpy.putAll(source);
                     for (Parameter parameter: parameters) {
+                        if (parameter.isAnnotationPresent(APIHeaderMap.class)) {
+                            targetArgs[cur++] = headerMap;
+                            continue;
+                        }
                         if (!parameter.isAnnotationPresent(APIParameter.class)) {
                             break;
                         }

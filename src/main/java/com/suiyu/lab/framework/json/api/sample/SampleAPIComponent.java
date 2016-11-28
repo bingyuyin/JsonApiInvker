@@ -1,10 +1,12 @@
 package com.suiyu.lab.framework.json.api.sample;
 
 import com.suiyu.lab.framework.json.api.annotation.API;
+import com.suiyu.lab.framework.json.api.annotation.APIHeaderMap;
 import com.suiyu.lab.framework.json.api.annotation.APIParameter;
 import com.suiyu.lab.framework.json.api.annotation.APIComponent;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by BingyuYin on 2016/11/13.
@@ -30,10 +32,15 @@ public class SampleAPIComponent {
     @API("sampleTestA")
     public void sampleApiTestAAAA(@APIParameter("param5")String param5, @APIParameter("param2")SampleParameterModel param2,@APIParameter(value = "nonRequired", required = false)String nonRequired,
                                  @APIParameter("param1")String param1, @APIParameter("param3")String param3, @APIParameter("param4")String param4,
-                                  @APIParameter("paramVar1")String paramVar1, @APIParameter("paramVar2")String paramVar2) {
+                                  @APIParameter("paramVar1")String paramVar1, @APIParameter("paramVar2")String paramVar2, @APIHeaderMap Map<String, String> headerMap) {
         System.out.println("api component api invoke sample testAAAA:\nparam1=" + param1 + ",\nparam3=" + param3 + ",\nparam4=" +
                 "" + param4 + ",\nparam5=" + param5 + ",\nparam2=" + param2.toString() + ",\nnonRequired="+nonRequired +
                 ",\nparamVar1=" + paramVar1 + ",\nparamVar2=" + paramVar2);
+        if (null != headerMap) {
+            for (Map.Entry<String, String> entry: headerMap.entrySet()) {
+                System.out.println(entry.getKey() + ": " + entry.getValue());
+            }
+        }
     }
 
     @API("sampleTestB")

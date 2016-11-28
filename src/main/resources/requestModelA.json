@@ -1,4 +1,7 @@
 {
+  "requestId":"111111",
+  "originalId":"22222",
+  "targetId":"33333",
    "command":"sampleService",
    "content":{
        "action":{

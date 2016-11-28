@@ -9,11 +9,21 @@ public class InvokeModel {
     private String api;
     private String serviceComponent;
     private Map<String, Object> argsMap;
+    private Map<String, String> headerMap;
 
     public InvokeModel (String serviceComponent,String api, Map<String, Object> argsMap) {
         this.api = api;
         this.serviceComponent = serviceComponent;
         this.argsMap = argsMap;
+    }
+
+    public InvokeModel(String serviceComponent, String api,  Map<String, Object> argsMap, Map<String, String> headerMap) {
+        this(serviceComponent, api, argsMap);
+        this.headerMap = headerMap;
+    }
+
+    public  Map<String, String> getHeaderMap() {
+        return this.headerMap;
     }
 
     public String getApi() {
