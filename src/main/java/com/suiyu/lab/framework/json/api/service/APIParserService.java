@@ -75,96 +75,27 @@ public class APIParserService {
         Field[] fields = clazz.getDeclaredFields();
         for (Field field: fields) {
             if (field.isAnnotationPresent(APIComponentDefinition.class)) {
-                if (field.getType().equals(String.class)) {
-                    try {
-                        String apiComponent = (String)retrieveFieldByGetter(instance, field, clazz);
-                        if (apiComponent != null && !apiComponent.isEmpty()) {
-                            apiComponentList.add(apiComponent);
-                        }
-                    } catch (Exception e) {
-                        logger.warn("Parse api component definition failed.");
-                    }
-                } else {
-                    logger.warn("Api component definition should be string type");
-                }
+                doParseAPIComponentDefinition(instance, field, clazz, apiComponentList);
             }
 
             if (field.isAnnotationPresent(APIDefinition.class)) {
-                if (field.getType().equals(String.class)) {
-                    try {
-                        String api = (String)retrieveFieldByGetter(instance, field, clazz);
-                        if (api != null && !api.isEmpty()) {
-                            apiList.add(api);
-                        }
-                    } catch (Exception e) {
-                        logger.warn("Parse api definition failed.");
-                    }
-                } else {
-                    logger.warn("Api definition should be string type");
-                }
+                doParseAPIDefinition(instance, field, clazz, apiList);
             }
 
             if (field.isAnnotationPresent(APIParametersDefinition.class)) {
-                Object fieldInstance = null;
-                try {
-                    fieldInstance = reflectGetFieldMethod(clazz,field).invoke(instance);
-                } catch (Exception e) {
-                    logger.warn("Parse api parameters definition failed.");
-                }
-                if (null == fieldInstance && field.getAnnotation(APIParametersDefinition.class).required()) {
-                    logger.error("Missing api parameters {}.", field.getName());
-                    throw new MissingAPIParameterException("Missing api parameters: " + field.getName() + " in request");
-                }
-                if (field.getType().equals(Map.class)) {
-                    Type[] types = ((ParameterizedType)field.getGenericType()).getActualTypeArguments();
-                    if (types[0].equals(String.class) && types.length == 2) {
-                        try {
-                            apiParameters.putAll((Map)fieldInstance);
-                        } catch (Exception e) {
-                            logger.warn("Parse api parameters failed.");
-                        }
-                    }
-                } else {
-                    Method[] varMethods = field.getType().getDeclaredMethods();
-                    try {
-                        if (null != fieldInstance) {
-                            for (Method varMethod : varMethods) {
-                                String methodName = varMethod.getName();
-                                if (methodName.startsWith("get") && methodName.length() > 4) {
-                                    apiParameters.put(methodName.substring(3, 4).toLowerCase() + methodName.substring(4), varMethod.invoke(fieldInstance));
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.warn("Parse api parameters failed.");
-                    }
-                }
+                doParseAPIParametersDefinition(instance, field, clazz, apiParameters);
             }
 
             if (field.isAnnotationPresent(APIParameterDefinition.class)) {
-                Object varObj = retrieveFieldByGetter(instance, field, clazz);
-
-                if (null == varObj && field.getAnnotation(APIParameterDefinition.class).required()) {
-                    throw new MissingAPIParameterException("Missing api parameter: " + field.getName());
-                }
-                apiParameters.put(field.getName(),varObj);
+                doParseAPIParameterDefinition(instance, field, clazz, apiParameters);
             }
 
             if (field.isAnnotationPresent(APIHeaderDefinition.class)) {
-                Object varObj = retrieveFieldByGetter(instance, field, clazz);
-                if (varObj == null || varObj instanceof String) {
-                    String headerName = field.getAnnotation(APIHeaderDefinition.class).value().trim();
-                    if (headerName.isEmpty()) {
-                        headerName = field.getName();
-                    }
-                    if (null == varObj) {
-                        headerMap.put(headerName, "");
-                    } else {
-                        headerMap.put(headerName, (String) varObj);
-                    }
-                } else {
-                    logger.error("the api header definition should be String type");
-                }
+                doParseAPIHeaderDefinition(instance, field, clazz, headerMap);
+            }
+
+            if (field.isAnnotationPresent(APIHeadersDefinition.class)) {
+                doParseAPIHeadersDefinition(instance, field, clazz, headerMap);
             }
 
             Object instanceVar = retrieveFieldByGetter(instance, field, clazz);
@@ -172,6 +103,118 @@ public class APIParserService {
                 doParseDefinitionModel(instanceVar, apiComponentList, apiList, apiParameters, headerMap);
             }
         }
+    }
+
+    private void doParseAPIComponentDefinition(Object instance,Field field, Class<?> clazz, List<String> apiComponentList) {
+        if (field.getType().equals(String.class)) {
+            try {
+                String apiComponent = (String)retrieveFieldByGetter(instance, field, clazz);
+                if (apiComponent != null && !apiComponent.isEmpty()) {
+                    apiComponentList.add(apiComponent);
+                }
+            } catch (Exception e) {
+                logger.warn("Parse api component definition failed.");
+            }
+        } else {
+            logger.warn("Api component definition should be string type");
+        }
+    }
+
+    private void doParseAPIDefinition(Object instance, Field field, Class<?> clazz, List<String> apiList) {
+        if (field.getType().equals(String.class)) {
+            try {
+                String api = (String)retrieveFieldByGetter(instance, field, clazz);
+                if (api != null && !api.isEmpty()) {
+                    apiList.add(api);
+                }
+            } catch (Exception e) {
+                logger.warn("Parse api definition failed.");
+            }
+        } else {
+            logger.warn("Api definition should be string type");
+        }
+    }
+
+    private void doParseAPIParametersDefinition(Object instance, Field field, Class<?> clazz, Map<String, Object> apiParameters) throws MissingAPIParameterException{
+        Object fieldInstance = null;
+        try {
+            fieldInstance = reflectGetFieldMethod(clazz,field).invoke(instance);
+        } catch (Exception e) {
+            logger.warn("Parse api parameters definition failed.");
+        }
+        if (null == fieldInstance && field.getAnnotation(APIParametersDefinition.class).required()) {
+            logger.error("Missing api parameters {}.", field.getName());
+            throw new MissingAPIParameterException("Missing api parameters: " + field.getName() + " in request");
+        }
+        if (field.getType().equals(Map.class)) {
+            Type[] types = ((ParameterizedType)field.getGenericType()).getActualTypeArguments();
+            if (types[0].equals(String.class) && types.length == 2) {
+                try {
+                    apiParameters.putAll((Map)fieldInstance);
+                } catch (Exception e) {
+                    logger.warn("Parse api parameters failed.");
+                }
+            }
+        } else {
+            Method[] varMethods = field.getType().getDeclaredMethods();
+            try {
+                if (null != fieldInstance) {
+                    for (Method varMethod : varMethods) {
+                        String methodName = varMethod.getName();
+                        if (methodName.startsWith("get") && methodName.length() > 4) {
+                            apiParameters.put(methodName.substring(3, 4).toLowerCase() + methodName.substring(4), varMethod.invoke(fieldInstance));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("Parse api parameters failed.");
+            }
+        }
+    }
+
+    private void doParseAPIParameterDefinition(Object instance, Field field, Class<?> clazz, Map<String, Object> apiParameters) throws MissingAPIParameterException{
+        Object varObj = retrieveFieldByGetter(instance, field, clazz);
+        if (null == varObj && field.getAnnotation(APIParameterDefinition.class).required()) {
+            throw new MissingAPIParameterException("Missing api parameter: " + field.getName());
+        }
+        apiParameters.put(field.getName(),varObj);
+    }
+
+    private void doParseAPIHeaderDefinition(Object instance, Field field, Class<?> clazz, Map<String, String> headerMap) {
+        Object varObj = retrieveFieldByGetter(instance, field, clazz);
+        if (varObj == null || varObj instanceof String) {
+            String headerName = field.getAnnotation(APIHeaderDefinition.class).value().trim();
+            if (headerName.isEmpty()) {
+                headerName = field.getName();
+            }
+            if (null == varObj) {
+                headerMap.put(headerName, "");
+            } else {
+                headerMap.put(headerName, (String) varObj);
+            }
+        } else {
+            logger.error("the api header definition should be String type");
+        }
+    }
+
+    private void doParseAPIHeadersDefinition(Object instance, Field field, Class<?> clazz, Map<String, String> headerMap) {
+        Object fieldInstance = null;
+        try {
+            fieldInstance = reflectGetFieldMethod(clazz, field).invoke(instance);
+        } catch (Exception e) {
+            logger.warn("parse api headers definition failed.");
+        }
+        if (field.getType().equals(Map.class)) {
+            Type[] types = ((ParameterizedType)field.getGenericType()).getActualTypeArguments();
+            if (types[0].equals(String.class) && types.length == 2 && types[1].equals(String.class)) {
+                try {
+                    headerMap.putAll((Map)fieldInstance);
+                } catch (Exception e) {
+                    logger.warn("Parse api parameters failed.");
+                }
+            }
+        }
+
     }
 
     public Method reflectGetFieldMethod(Class<?> clazz, Field field) throws Exception{

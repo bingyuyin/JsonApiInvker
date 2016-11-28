@@ -1,9 +1,8 @@
 package com.suiyu.lab.framework.json.api.sample.model;
 
-import com.suiyu.lab.framework.json.api.annotation.APIComponentDefinition;
-import com.suiyu.lab.framework.json.api.annotation.APIHeaderDefinition;
-import com.suiyu.lab.framework.json.api.annotation.APIParameterDefinition;
-import com.suiyu.lab.framework.json.api.annotation.APIParametersDefinition;
+import com.suiyu.lab.framework.json.api.annotation.*;
+
+import java.util.Map;
 
 /**
  * Created by BingyuYin on 2016/11/13.
@@ -17,6 +16,9 @@ public class Command {
 
     @APIHeaderDefinition
     private String targetId;
+
+    @APIHeadersDefinition
+    private Map<String, String> headers;
 
     @APIComponentDefinition
     private String command;
@@ -38,6 +40,10 @@ public class Command {
 
     public String getTargetId() {
         return targetId;
+    }
+
+    public Map<String, String> getHeaders() {
+        return this.headers;
     }
 
     public String getCommand() {
