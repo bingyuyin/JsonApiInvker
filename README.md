@@ -35,6 +35,58 @@ To avoid parse the JSON message each time manually:
   
   A sample message model might be:
   
+  public class MessageModel {
+  
+      @APIHeaderDefinition
+    
+      private String requestId;
+    
+      @APIHeaderDefinition
+    
+      private String originalId;
+    
+      @APIHeaderDefinition
+    
+      private String targetId;
+    
+      @APIHeaderDefinition
+    
+      private String sourceId;
+
+      private MessageBody body;
+    
+      // getters for each field
+  
+      private class MessageBody {
+    
+        @APIComponentDefinition
+
+        private String command;
+
+        private MessageContent content;
+
+        // getters for each field
+
+        private class MessageContent {
+
+          @APIParametersDefinition
+
+          private Map<String, Object> paramterMap;
+
+          @APIParametersDefinition
+
+          private ParametersSampeModel paramterModel;
+
+          @APIParameterDefinition
+
+          private SingleParameterModel singleParameterModel;
+
+          // getters for the fields
+
+        }
+      }  
+  }
+  
 
 2. Invoke strategy:
 
