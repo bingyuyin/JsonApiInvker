@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.suiyu.lab.framework.json.api.annotation.*;
 import com.suiyu.lab.framework.json.api.exception.APIModelParseException;
+import com.suiyu.lab.framework.json.api.exception.MissingAPIHeaderException;
 import com.suiyu.lab.framework.json.api.exception.MissingAPIParameterException;
 import com.suiyu.lab.framework.json.api.model.InvokeModel;
 import com.suiyu.lab.framework.json.api.utils.GsonFactory;
@@ -180,33 +181,39 @@ public class APIParserService {
         apiParameters.put(field.getName(),varObj);
     }
 
-    private void doParseAPIHeaderDefinition(Object instance, Field field, Class<?> clazz, Map<String, String> headerMap) {
-        Object varObj = retrieveFieldByGetter(instance, field, clazz);
-        if (varObj == null || varObj instanceof String) {
-            String headerName = field.getAnnotation(APIHeaderDefinition.class).value().trim();
-            if (headerName.isEmpty()) {
-                headerName = field.getName();
+    private void doParseAPIHeaderDefinition(Object instance, Field field, Class<?> clazz, Map<String, String> headerMap) throws MissingAPIHeaderException{
+        if (field.getType().equals(String.class)) {
+            Object varObj = retrieveFieldByGetter(instance, field, clazz);
+            String headerName = field.getName();
+            if (varObj == null && field.getAnnotation(APIHeaderDefinition.class).required()) {
+                throw new MissingAPIHeaderException("Missing api header: " + field.getName() + " in request");
             }
-            if (null == varObj) {
+            if (varObj == null ) {
                 headerMap.put(headerName, "");
             } else {
-                headerMap.put(headerName, (String) varObj);
+                headerMap.put(headerName, (String)varObj);
             }
         } else {
             logger.error("the api header definition should be String type");
         }
+
     }
 
-    private void doParseAPIHeadersDefinition(Object instance, Field field, Class<?> clazz, Map<String, String> headerMap) {
+    private void doParseAPIHeadersDefinition(Object instance, Field field, Class<?> clazz, Map<String, String> headerMap) throws MissingAPIHeaderException{
         Object fieldInstance = null;
         try {
             fieldInstance = reflectGetFieldMethod(clazz, field).invoke(instance);
         } catch (Exception e) {
             logger.warn("parse api headers definition failed.");
         }
+        if (fieldInstance == null && field.getAnnotation(APIHeadersDefinition.class).required()) {
+            throw new MissingAPIHeaderException("Missing api headers: " + field.getName() + " in request");
+        }
         if (field.getType().equals(Map.class)) {
             Type[] types = ((ParameterizedType)field.getGenericType()).getActualTypeArguments();
-            if (types[0].equals(String.class) && types.length == 2 && types[1].equals(String.class)) {
+            if (types[0].equals(String.class)
+                    && types.length == 2
+                    && types[1].equals(String.class)){
                 try {
                     headerMap.putAll((Map)fieldInstance);
                 } catch (Exception e) {
