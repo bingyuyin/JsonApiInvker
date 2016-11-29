@@ -35,57 +35,46 @@ To avoid parse the JSON message each time manually:
   
   A sample message model might be:
   
-  public class MessageModel {
   
-      @APIHeaderDefinition
-    
-      private String requestId;
-    
-      @APIHeaderDefinition
-    
-      private String originalId;
-    
-      @APIHeaderDefinition
-    
-      private String targetId;
-    
-      @APIHeaderDefinition
-    
-      private String sourceId;
+      public class MessageModel {
 
-      private MessageBody body;
-    
-      // getters for each field
-  
-      private class MessageBody {
-    
-        @APIComponentDefinition
+        @APIHeaderDefinition
 
-        private String command;
+        private String requestId;      
 
-        private MessageContent content;
+        private MessageBody body;
 
         // getters for each field
 
-        private class MessageContent {
+        private class MessageBody {
 
-          @APIParametersDefinition
+          @APIComponentDefinition
 
-          private Map<String, Object> paramterMap;
+          private String command;
 
-          @APIParametersDefinition
+          private MessageContent content;
 
-          private ParametersSampeModel paramterModel;
+          // getters for each field
 
-          @APIParameterDefinition
+          private class MessageContent {
 
-          private SingleParameterModel singleParameterModel;
+            @APIParametersDefinition
 
-          // getters for the fields
+            private Map<String, Object> paramterMap;
 
-        }
-      }  
-  }
+            @APIParametersDefinition
+
+            private ParametersSampeModel paramterModel;
+
+            @APIParameterDefinition
+
+            private SingleParameterModel singleParameterModel;
+
+            // getters for the fields
+
+          }
+        }  
+      }
   
 
 2. Invoke strategy:
@@ -96,7 +85,10 @@ To avoid parse the JSON message each time manually:
   
   3) It will invoke the most match @API, inside each @APICompoent.
   
+3. Work flow
 
+   ![Alt text](https://github.com/bingyuyin/json-api-invoker/assets/work-flow.png "Work Flow")
+  
 ## Demo
 
 Check a details demo under the package **.Sample
