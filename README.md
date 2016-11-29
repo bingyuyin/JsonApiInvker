@@ -57,6 +57,10 @@ To avoid parse the JSON message each time manually:
           // getters for each field
 
           private class MessageContent {
+          
+            @APIDefinition
+            
+            private String actionName;
 
             @APIParametersDefinition
 
