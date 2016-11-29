@@ -87,7 +87,7 @@ To avoid parse the JSON message each time manually:
   
 3. Work flow
 
-   ![Alt text](https://github.com/bingyuyin/json-api-invoker/assets/work-flow.png "Work Flow")
+   ![Alt text](https://github.com/bingyuyin/json-api-invoker/blob/master/assets/work-flow.png "Work Flow")
   
 ## Demo
 
