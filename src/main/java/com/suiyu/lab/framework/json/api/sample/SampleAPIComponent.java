@@ -4,6 +4,8 @@ import com.suiyu.lab.framework.json.api.annotation.API;
 import com.suiyu.lab.framework.json.api.annotation.APIHeaderMap;
 import com.suiyu.lab.framework.json.api.annotation.APIParameter;
 import com.suiyu.lab.framework.json.api.annotation.APIComponent;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +14,11 @@ import java.util.Map;
  * Created by BingyuYin on 2016/11/13.
  */
 @APIComponent("sampleService")
+@Component
 public class SampleAPIComponent {
+    @Autowired
+    private SpringComponentSampleA springComponentSampleA;
+
     @API("sampleTestA")
     public void sampleApiTestA(@APIParameter("param1") String param1, @APIParameter("param2")SampleParameterModel param2) {
         System.out.println("api component api invoke sample testA: param1= " + param1 + ",\n param2= "+param2);
@@ -41,6 +47,7 @@ public class SampleAPIComponent {
                 System.out.println(entry.getKey() + ": " + entry.getValue());
             }
         }
+        springComponentSampleA.sampleATest();
     }
 
     @API("sampleTestB")

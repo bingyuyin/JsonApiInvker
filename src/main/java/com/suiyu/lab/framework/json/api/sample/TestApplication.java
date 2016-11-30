@@ -5,6 +5,8 @@ import com.suiyu.lab.framework.json.api.sample.model.Command;
 import com.suiyu.lab.framework.json.api.service.APIService;
 import com.suiyu.lab.framework.json.api.exception.APIInvokeException;
 import org.apache.commons.io.IOUtils;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.io.IOException;
 
@@ -14,6 +16,8 @@ import java.io.IOException;
 public class TestApplication {
     public static void main(String[] args) {
         APIService apiService = APIService.create("com.suiyu.lab.framework.json.api");
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(SpringApplicationContextConfiguration.class);
+        apiService.setApplicationContext(applicationContext);
         try {
             String requestA = IOUtils.toString(TestApplication.class.getClassLoader().getResourceAsStream("requestModelA.json"));
             String requestB = IOUtils.toString(TestApplication.class.getClassLoader().getResourceAsStream("requestModelB.json"));

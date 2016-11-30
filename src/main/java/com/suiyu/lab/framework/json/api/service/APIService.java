@@ -12,8 +12,11 @@ import com.suiyu.lab.framework.json.api.model.InvokeCandidate;
 import com.suiyu.lab.framework.json.api.model.InvokeModel;
 import com.suiyu.lab.framework.json.api.exception.APIInvokeException;
 import com.suiyu.lab.framework.json.api.exception.AmbiguousAPIInvokeException;
+import javafx.application.Application;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -26,6 +29,7 @@ public class APIService {
     private String basePackage = null;
     private ClassLoader classLoader = APIService.class.getClassLoader();
     private APIParserService parserService = APIParserService.create();
+    private ApplicationContext applicationContext = null;
 
     private APIService(String basePackage) {
         this.basePackage = basePackage;
@@ -54,6 +58,10 @@ public class APIService {
         if (null != basePackage) {
             this.basePackage = basePackage;
         }
+    }
+
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
     }
 
     public void setClassLoader(ClassLoader classLoader) {
@@ -138,7 +146,7 @@ public class APIService {
                         continue;
                     }
                     // all api parameters consumed
-                    candidateList.add(new InvokeCandidate(method, clazz.newInstance(), targetArgs, source.size() - parameters.length));
+                    candidateList.add(new InvokeCandidate(method, retrieveInstance(clazz), targetArgs, source.size() - parameters.length));
                 }
             }
             if (candidateList.size() == 0) {
@@ -154,6 +162,21 @@ public class APIService {
         } catch (Exception e) {
             throw new APIInvokeException(e.getMessage());
         }
+    }
+
+    private Object retrieveInstance(Class<?> clazz) throws Exception{
+
+        if (applicationContext != null && clazz.isAnnotationPresent(Component.class)) {
+            Component component = clazz.getAnnotation(Component.class);
+            String componentName = clazz.getSimpleName();
+            componentName = componentName.substring(0, 1).toLowerCase() + componentName.substring(1);
+            if (component.value() != null && !component.value().isEmpty()) {
+                componentName = component.value();
+            }
+            return applicationContext.getBean(componentName);
+
+        }
+        return clazz.newInstance();
     }
 
     private class InvokeCandidateComparator implements Comparator<InvokeCandidate> {
