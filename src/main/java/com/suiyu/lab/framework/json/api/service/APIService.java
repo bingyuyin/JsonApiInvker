@@ -113,6 +113,7 @@ public class APIService {
                     }
                     Object[] targetArgs = new Object[parameters.length];
                     int cur = 0;
+                    int unRequiredAndUnProvided = 0;
                     Map<String, Object> sourceCpy = new HashMap<String, Object>();
                     sourceCpy.putAll(source);
                     for (Parameter parameter: parameters) {
@@ -127,6 +128,9 @@ public class APIService {
                         String name = param.value();
                         if (!sourceCpy.containsKey(name) && param.required()) {
                             break;
+                        }
+                        if (!sourceCpy.containsKey(name)) {
+                            unRequiredAndUnProvided++;
                         }
                         Object argObj = sourceCpy.get(name);
                         try {
@@ -146,7 +150,7 @@ public class APIService {
                         continue;
                     }
                     // all api parameters consumed
-                    candidateList.add(new InvokeCandidate(method, retrieveInstance(clazz), targetArgs, source.size() - parameters.length));
+                    candidateList.add(new InvokeCandidate(method, retrieveInstance(clazz), targetArgs, source.size() - parameters.length + unRequiredAndUnProvided));
                 }
             }
             if (candidateList.size() == 0) {
